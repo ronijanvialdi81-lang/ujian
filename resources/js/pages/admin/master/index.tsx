@@ -12,6 +12,7 @@ import {
     Clock,
     GraduationCap,
     Layers,
+    Pencil,
     Plus,
     Search,
     Server,
@@ -51,6 +52,7 @@ export default function MasterIndex({
 }: MasterProps) {
     const [searchTerm, setSearchTerm] = useState(search);
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<any | null>(null);
     const [formData, setFormData] = useState<Record<string, string>>({});
 
     const mapelList = Array.isArray(mapel) ? mapel : (mapel?.data || []);
@@ -103,14 +105,60 @@ export default function MasterIndex({
         }
     };
 
+    const openAddModal = () => {
+        setEditingItem(null);
+        setFormData({});
+        setIsAddOpen(true);
+    };
+
+    const openEditModal = (item: any) => {
+        setEditingItem(item);
+        if (activeTab === 'mapel') {
+            setFormData({ kode_mapel: item.kode_mapel || '', nama_mapel: item.nama_mapel || '' });
+        } else if (activeTab === 'kelas') {
+            setFormData({ id_kelas: item.id_kelas || '', nama: item.nama || '', level: item.level || '' });
+        } else if (activeTab === 'ruang') {
+            setFormData({ kode_ruang: item.kode_ruang || '', keterangan: item.keterangan || '' });
+        } else if (activeTab === 'sesi') {
+            setFormData({ kode_sesi: item.kode_sesi || '', nama_sesi: item.nama_sesi || '' });
+        } else if (activeTab === 'jurusan') {
+            setFormData({ id_pk: item.id_pk || '', program_keahlian: item.program_keahlian || '' });
+        } else if (activeTab === 'level') {
+            setFormData({ kode_level: item.kode_level || '', keterangan: item.keterangan || '' });
+        } else if (activeTab === 'server') {
+            setFormData({ kode_server: item.kode_server || '', nama_server: item.nama_server || '', status: item.status || 'aktif' });
+        }
+        setIsAddOpen(true);
+    };
+
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post('/admin/master', { tab: activeTab, ...formData }, {
-            onSuccess: () => {
-                setIsAddOpen(false);
-                setFormData({});
-            },
-        });
+        if (editingItem) {
+            let id = '';
+            if (activeTab === 'mapel') id = editingItem.kode_mapel;
+            else if (activeTab === 'kelas') id = editingItem.id_kelas;
+            else if (activeTab === 'ruang') id = editingItem.kode_ruang;
+            else if (activeTab === 'sesi') id = editingItem.kode_sesi;
+            else if (activeTab === 'jurusan') id = editingItem.id_pk;
+            else if (activeTab === 'level') id = editingItem.kode_level;
+            else if (activeTab === 'server') id = editingItem.kode_server;
+
+            router.put(`/admin/master/${id}`, { tab: activeTab, ...formData }, {
+                onSuccess: () => {
+                    setIsAddOpen(false);
+                    setEditingItem(null);
+                    setFormData({});
+                },
+            });
+        } else {
+            router.post('/admin/master', { tab: activeTab, ...formData }, {
+                onSuccess: () => {
+                    setIsAddOpen(false);
+                    setEditingItem(null);
+                    setFormData({});
+                },
+            });
+        }
     };
 
     return (
@@ -127,10 +175,7 @@ export default function MasterIndex({
                         </p>
                     </div>
                     <Button
-                        onClick={() => {
-                            setFormData({});
-                            setIsAddOpen(true);
-                        }}
+                        onClick={openAddModal}
                         className="bg-white text-blue-700 hover:bg-blue-50 font-semibold shadow-sm w-fit"
                     >
                         <Plus className="size-4 mr-2" />
@@ -210,14 +255,26 @@ export default function MasterIndex({
                                                 <td className="py-3 px-4 font-mono font-medium text-purple-600">{item.kode_mapel}</td>
                                                 <td className="py-3 px-4 font-medium">{item.nama_mapel}</td>
                                                 <td className="py-3 px-4 text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(item.kode_mapel)}
-                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 size-8 p-0"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                    </Button>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openEditModal(item)}
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-8 p-0"
+                                                            title="Edit Data"
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(item.kode_mapel)}
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-8 p-0"
+                                                            title="Hapus Data"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -258,14 +315,26 @@ export default function MasterIndex({
                                                     </span>
                                                 </td>
                                                 <td className="py-3 px-4 text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(item.id_kelas)}
-                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 size-8 p-0"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                    </Button>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openEditModal(item)}
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-8 p-0"
+                                                            title="Edit Data"
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(item.id_kelas)}
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-8 p-0"
+                                                            title="Hapus Data"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -300,14 +369,26 @@ export default function MasterIndex({
                                                 <td className="py-3 px-4 font-mono font-medium text-purple-600">{item.kode_ruang}</td>
                                                 <td className="py-3 px-4 font-medium">{item.keterangan}</td>
                                                 <td className="py-3 px-4 text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(item.kode_ruang)}
-                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 size-8 p-0"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                    </Button>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openEditModal(item)}
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-8 p-0"
+                                                            title="Edit Data"
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(item.kode_ruang)}
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-8 p-0"
+                                                            title="Hapus Data"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -342,14 +423,26 @@ export default function MasterIndex({
                                                 <td className="py-3 px-4 font-mono font-medium text-emerald-600">{item.kode_sesi}</td>
                                                 <td className="py-3 px-4 font-medium">{item.nama_sesi}</td>
                                                 <td className="py-3 px-4 text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(item.kode_sesi)}
-                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 size-8 p-0"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                    </Button>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openEditModal(item)}
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-8 p-0"
+                                                            title="Edit Data"
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(item.kode_sesi)}
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-8 p-0"
+                                                            title="Hapus Data"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -384,14 +477,26 @@ export default function MasterIndex({
                                                 <td className="py-3 px-4 font-mono font-medium text-indigo-600">{item.id_pk}</td>
                                                 <td className="py-3 px-4 font-medium">{item.program_keahlian}</td>
                                                 <td className="py-3 px-4 text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(item.id_pk)}
-                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 size-8 p-0"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                    </Button>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openEditModal(item)}
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-8 p-0"
+                                                            title="Edit Data"
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(item.id_pk)}
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-8 p-0"
+                                                            title="Hapus Data"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -426,14 +531,26 @@ export default function MasterIndex({
                                                 <td className="py-3 px-4 font-mono font-medium text-purple-600">{item.kode_level}</td>
                                                 <td className="py-3 px-4 font-medium">{item.keterangan}</td>
                                                 <td className="py-3 px-4 text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(item.kode_level)}
-                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 size-8 p-0"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                    </Button>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openEditModal(item)}
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-8 p-0"
+                                                            title="Edit Data"
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(item.kode_level)}
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-8 p-0"
+                                                            title="Hapus Data"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -478,14 +595,26 @@ export default function MasterIndex({
                                                     </span>
                                                 </td>
                                                 <td className="py-3 px-4 text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(item.kode_server)}
-                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 size-8 p-0"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                    </Button>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => openEditModal(item)}
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-8 p-0"
+                                                            title="Edit Data"
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(item.kode_server)}
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-8 p-0"
+                                                            title="Hapus Data"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -499,13 +628,15 @@ export default function MasterIndex({
                 </div>
             </div>
 
-            {/* Add Modal */}
+            {/* Add/Edit Modal */}
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Tambah Data {tabs.find((t) => t.id === activeTab)?.label}</DialogTitle>
+                        <DialogTitle>{editingItem ? 'Edit' : 'Tambah'} Data {tabs.find((t) => t.id === activeTab)?.label}</DialogTitle>
                         <DialogDescription>
-                            Isi formulir berikut untuk menambahkan item master baru.
+                            {editingItem
+                                ? 'Perbarui informasi item master yang dipilih.'
+                                : 'Isi formulir berikut untuk menambahkan item master baru.'}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -518,6 +649,7 @@ export default function MasterIndex({
                                         required
                                         placeholder="cth: MTK, BINDO"
                                         value={formData.kode_mapel || ''}
+                                        disabled={!!editingItem}
                                         onChange={(e) => setFormData({ ...formData, kode_mapel: e.target.value })}
                                     />
                                 </div>
@@ -541,6 +673,7 @@ export default function MasterIndex({
                                         required
                                         placeholder="cth: X-TKJ-1"
                                         value={formData.id_kelas || ''}
+                                        disabled={!!editingItem}
                                         onChange={(e) => setFormData({ ...formData, id_kelas: e.target.value })}
                                     />
                                 </div>
@@ -573,6 +706,7 @@ export default function MasterIndex({
                                         required
                                         placeholder="cth: R01, LAB-1"
                                         value={formData.kode_ruang || ''}
+                                        disabled={!!editingItem}
                                         onChange={(e) => setFormData({ ...formData, kode_ruang: e.target.value })}
                                     />
                                 </div>
@@ -596,6 +730,7 @@ export default function MasterIndex({
                                         required
                                         placeholder="cth: 1, 2, 3"
                                         value={formData.kode_sesi || ''}
+                                        disabled={!!editingItem}
                                         onChange={(e) => setFormData({ ...formData, kode_sesi: e.target.value })}
                                     />
                                 </div>
@@ -619,6 +754,7 @@ export default function MasterIndex({
                                         required
                                         placeholder="cth: TKJ, RPL, AKL"
                                         value={formData.id_pk || ''}
+                                        disabled={!!editingItem}
                                         onChange={(e) => setFormData({ ...formData, id_pk: e.target.value })}
                                     />
                                 </div>
@@ -642,6 +778,7 @@ export default function MasterIndex({
                                         required
                                         placeholder="cth: X, XI, XII"
                                         value={formData.kode_level || ''}
+                                        disabled={!!editingItem}
                                         onChange={(e) => setFormData({ ...formData, kode_level: e.target.value })}
                                     />
                                 </div>
@@ -665,6 +802,7 @@ export default function MasterIndex({
                                         required
                                         placeholder="cth: SRV-01"
                                         value={formData.kode_server || ''}
+                                        disabled={!!editingItem}
                                         onChange={(e) => setFormData({ ...formData, kode_server: e.target.value })}
                                     />
                                 </div>
@@ -694,7 +832,7 @@ export default function MasterIndex({
                                 Batal
                             </Button>
                             <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white font-medium">
-                                Simpan Data
+                                {editingItem ? 'Perbarui Data' : 'Simpan Data'}
                             </Button>
                         </DialogFooter>
                     </form>

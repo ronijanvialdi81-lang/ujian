@@ -52,6 +52,28 @@ class PengumumanController extends Controller
     }
 
     /**
+     * Update announcement.
+     */
+    public function update(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'judul' => 'required|string|max:100',
+            'text' => 'required|string',
+            'type' => 'nullable|string|max:20',
+        ]);
+
+        if (Schema::hasTable('pengumuman')) {
+            CandyPengumuman::where('id_pengumuman', $id)->update([
+                'judul' => $validated['judul'],
+                'text' => $validated['text'],
+                'type' => $validated['type'] ?? 'eksternal',
+            ]);
+        }
+
+        return back()->with('success', 'Pengumuman berhasil diperbarui.');
+    }
+
+    /**
      * Delete announcement.
      */
     public function destroy($id): RedirectResponse

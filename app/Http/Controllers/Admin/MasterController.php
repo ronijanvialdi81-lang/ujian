@@ -165,6 +165,62 @@ class MasterController extends Controller
     }
 
     /**
+     * Update a master item.
+     */
+    public function update(Request $request, string $id): RedirectResponse
+    {
+        $tab = $request->input('tab', 'mapel');
+
+        if ($tab === 'mapel' && Schema::hasTable('mata_pelajaran')) {
+            $validated = $request->validate([
+                'kode_mapel' => 'required|string|max:20',
+                'nama_mapel' => 'required|string|max:50',
+            ]);
+            CandyMataPelajaran::where('kode_mapel', $id)->update($validated);
+        } elseif ($tab === 'kelas' && Schema::hasTable('kelas')) {
+            $validated = $request->validate([
+                'id_kelas' => 'required|string|max:11',
+                'nama' => 'required|string|max:30',
+                'level' => 'required|string|max:20',
+            ]);
+            CandyKelas::where('id_kelas', $id)->update($validated);
+        } elseif ($tab === 'ruang' && Schema::hasTable('ruang')) {
+            $validated = $request->validate([
+                'kode_ruang' => 'required|string|max:10',
+                'keterangan' => 'required|string|max:30',
+            ]);
+            CandyRuang::where('kode_ruang', $id)->update($validated);
+        } elseif ($tab === 'sesi' && Schema::hasTable('sesi')) {
+            $validated = $request->validate([
+                'kode_sesi' => 'required|string|max:10',
+                'nama_sesi' => 'required|string|max:30',
+            ]);
+            CandySesi::where('kode_sesi', $id)->update($validated);
+        } elseif ($tab === 'jurusan' && Schema::hasTable('pk')) {
+            $validated = $request->validate([
+                'id_pk' => 'required|string|max:10',
+                'program_keahlian' => 'required|string|max:50',
+            ]);
+            CandyPk::where('id_pk', $id)->update($validated);
+        } elseif ($tab === 'level' && Schema::hasTable('level')) {
+            $validated = $request->validate([
+                'kode_level' => 'required|string|max:5',
+                'keterangan' => 'required|string|max:50',
+            ]);
+            CandyLevel::where('kode_level', $id)->update($validated);
+        } elseif ($tab === 'server' && Schema::hasTable('server')) {
+            $validated = $request->validate([
+                'kode_server' => 'required|string|max:20',
+                'nama_server' => 'required|string|max:30',
+                'status' => 'required|string|max:15',
+            ]);
+            CandyServer::where('kode_server', $id)->update($validated);
+        }
+
+        return redirect()->route('admin.master', ['tab' => $tab])->with('success', 'Data master berhasil diperbarui.');
+    }
+
+    /**
      * Delete a master item.
      */
     public function destroy(Request $request, string $id): RedirectResponse

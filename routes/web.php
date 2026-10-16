@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
         // Data Master
         Route::get('master', [\App\Http\Controllers\Admin\MasterController::class, 'index'])->name('master');
         Route::post('master', [\App\Http\Controllers\Admin\MasterController::class, 'store'])->name('master.store');
+        Route::put('master/{id}', [\App\Http\Controllers\Admin\MasterController::class, 'update'])->name('master.update');
         Route::delete('master/{id}', [\App\Http\Controllers\Admin\MasterController::class, 'destroy'])->name('master.destroy');
 
         // Status Peserta
@@ -65,11 +66,13 @@ Route::middleware(['auth'])->group(function () {
         // Pengumuman
         Route::get('pengumuman', [\App\Http\Controllers\Admin\PengumumanController::class, 'index'])->name('pengumuman');
         Route::post('pengumuman', [\App\Http\Controllers\Admin\PengumumanController::class, 'store'])->name('pengumuman.store');
+        Route::put('pengumuman/{id}', [\App\Http\Controllers\Admin\PengumumanController::class, 'update'])->name('pengumuman.update');
         Route::delete('pengumuman/{id}', [\App\Http\Controllers\Admin\PengumumanController::class, 'destroy'])->name('pengumuman.destroy');
 
         // Manajemen User: Administrator & Proktor
         Route::get('pengawas', [\App\Http\Controllers\Admin\PengawasController::class, 'index'])->name('pengawas');
         Route::post('pengawas', [\App\Http\Controllers\Admin\PengawasController::class, 'store'])->name('pengawas.store');
+        Route::put('pengawas/{id}', [\App\Http\Controllers\Admin\PengawasController::class, 'update'])->name('pengawas.update');
         Route::delete('pengawas/{id}', [\App\Http\Controllers\Admin\PengawasController::class, 'destroy'])->name('pengawas.destroy');
 
         // Pengaturan

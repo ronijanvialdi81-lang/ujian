@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import {
+    Pencil,
     Plus,
     Search,
     Shield,
@@ -37,6 +38,7 @@ export default function PengawasIndex({
 
     const [search, setSearch] = useState(filters.search || '');
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<any | null>(null);
     const [formData, setFormData] = useState({
         nip: '',
         nama: '',
@@ -51,21 +53,66 @@ export default function PengawasIndex({
         router.get('/admin/pengawas', { search }, { preserveState: true });
     };
 
+    const openAddModal = () => {
+        setEditingItem(null);
+        setFormData({
+            nip: '',
+            nama: '',
+            username: '',
+            password: '',
+            jabatan: 'Proktor Utama',
+            level: 'admin',
+        });
+        setIsAddOpen(true);
+    };
+
+    const openEditModal = (admin: any) => {
+        setEditingItem(admin);
+        setFormData({
+            nip: admin.nip || '',
+            nama: admin.nama || admin.name || '',
+            username: admin.username || admin.email || '',
+            password: '',
+            jabatan: admin.jabatan || 'Proktor Utama',
+            level: admin.level || 'admin',
+        });
+        setIsAddOpen(true);
+    };
+
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post('/admin/pengawas', formData, {
-            onSuccess: () => {
-                setIsAddOpen(false);
-                setFormData({
-                    nip: '',
-                    nama: '',
-                    username: '',
-                    password: '',
-                    jabatan: 'Proktor Utama',
-                    level: 'admin',
-                });
-            },
-        });
+        if (editingItem) {
+            const id = editingItem.id_pengawas || editingItem.id;
+            router.put(`/admin/pengawas/${id}`, formData, {
+                onSuccess: () => {
+                    setIsAddOpen(false);
+                    setEditingItem(null);
+                    setFormData({
+                        nip: '',
+                        nama: '',
+                        username: '',
+                        password: '',
+                        jabatan: 'Proktor Utama',
+                        level: 'admin',
+                    });
+                },
+            });
+        } else {
+            router.post('/admin/pengawas', formData, {
+                onSuccess: () => {
+                    setIsAddOpen(false);
+                    setEditingItem(null);
+                    setFormData({
+                        nip: '',
+                        nama: '',
+                        username: '',
+                        password: '',
+                        jabatan: 'Proktor Utama',
+                        level: 'admin',
+                    });
+                },
+            });
+        }
     };
 
     const handleDelete = (id: number) => {
@@ -93,7 +140,7 @@ export default function PengawasIndex({
                     </div>
 
                     <Button
-                        onClick={() => setIsAddOpen(true)}
+                        onClick={openAddModal}
                         className="bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-md w-fit"
                     >
                         <Plus className="size-4 mr-2" />
@@ -169,14 +216,26 @@ export default function PengawasIndex({
                                                 </Badge>
                                             </td>
                                             <td className="py-3 px-4 text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(admin.id_pengawas || admin.id)}
-                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 size-8 p-0"
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => openEditModal(admin)}
+                                                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-8 p-0"
+                                                        title="Edit Akun"
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleDelete(admin.id_pengawas || admin.id)}
+                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-8 p-0"
+                                                        title="Hapus Akun"
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </Button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -188,13 +247,15 @@ export default function PengawasIndex({
                 </div>
             </div>
 
-            {/* Modal Tambah Administrator */}
+            {/* Modal Tambah/Edit Administrator */}
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Tambah Administrator / Proktor</DialogTitle>
+                        <DialogTitle>{editingItem ? 'Edit Administrator / Proktor' : 'Tambah Administrator / Proktor'}</DialogTitle>
                         <DialogDescription>
-                            Daftarkan akun pengawas ruangan atau proktor teknis CBT.
+                            {editingItem
+                                ? 'Perbarui data akun administrator atau proktor yang dipilih.'
+                                : 'Daftarkan akun pengawas ruangan atau proktor teknis CBT.'}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -220,11 +281,13 @@ export default function PengawasIndex({
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Password</label>
+                                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                    Password {editingItem && <span className="font-normal text-gray-400">(Opsional)</span>}
+                                </label>
                                 <Input
-                                    required
+                                    required={!editingItem}
                                     type="password"
-                                    placeholder="minimal 4 karakter"
+                                    placeholder={editingItem ? 'kosongkan jika tidak diubah' : 'minimal 4 karakter'}
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 />
@@ -255,7 +318,7 @@ export default function PengawasIndex({
                                 Batal
                             </Button>
                             <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white font-medium">
-                                Simpan Akun
+                                {editingItem ? 'Perbarui Akun' : 'Simpan Akun'}
                             </Button>
                         </DialogFooter>
                     </form>

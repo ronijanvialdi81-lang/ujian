@@ -8,6 +8,7 @@ import { Head, router } from '@inertiajs/react';
 import {
     Calendar,
     Megaphone,
+    Pencil,
     Plus,
     Trash2,
     Users,
@@ -31,19 +32,48 @@ export default function PengumumanIndex({ pengumuman }: PengumumanProps) {
     const to = Array.isArray(pengumuman) ? pengumuman?.length : pengumuman?.to;
     const total = Array.isArray(pengumuman) ? pengumuman?.length : (pengumuman?.total || 0);
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<any | null>(null);
     const [judul, setJudul] = useState('');
     const [text, setText] = useState('');
     const [type, setType] = useState('eksternal');
 
+    const openAddModal = () => {
+        setEditingItem(null);
+        setJudul('');
+        setText('');
+        setType('eksternal');
+        setIsAddOpen(true);
+    };
+
+    const openEditModal = (item: any) => {
+        setEditingItem(item);
+        setJudul(item.judul || '');
+        setText(item.text || '');
+        setType(item.type || 'eksternal');
+        setIsAddOpen(true);
+    };
+
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post('/admin/pengumuman', { judul, text, type }, {
-            onSuccess: () => {
-                setIsAddOpen(false);
-                setJudul('');
-                setText('');
-            },
-        });
+        if (editingItem) {
+            router.put(`/admin/pengumuman/${editingItem.id_pengumuman}`, { judul, text, type }, {
+                onSuccess: () => {
+                    setIsAddOpen(false);
+                    setEditingItem(null);
+                    setJudul('');
+                    setText('');
+                },
+            });
+        } else {
+            router.post('/admin/pengumuman', { judul, text, type }, {
+                onSuccess: () => {
+                    setIsAddOpen(false);
+                    setEditingItem(null);
+                    setJudul('');
+                    setText('');
+                },
+            });
+        }
     };
 
     const handleDelete = (id: number) => {
@@ -71,7 +101,7 @@ export default function PengumumanIndex({ pengumuman }: PengumumanProps) {
                     </div>
 
                     <Button
-                        onClick={() => setIsAddOpen(true)}
+                        onClick={openAddModal}
                         className="bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-md w-fit"
                     >
                         <Plus className="size-4 mr-2" />
@@ -104,16 +134,26 @@ export default function PengumumanIndex({ pengumuman }: PengumumanProps) {
                                         </h3>
                                     </div>
 
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex items-center gap-1 text-xs text-gray-400">
+                                    <div className="flex items-center gap-2">
+                                        <span className="flex items-center gap-1 text-xs text-gray-400 mr-2">
                                             <Calendar className="size-3.5" />
                                             {item.date || '-'}
                                         </span>
                                         <Button
                                             variant="ghost"
                                             size="sm"
+                                            onClick={() => openEditModal(item)}
+                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 size-7 p-0"
+                                            title="Edit Pengumuman"
+                                        >
+                                            <Pencil className="size-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={() => handleDelete(item.id_pengumuman)}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 size-7 p-0"
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40 size-7 p-0"
+                                            title="Hapus Pengumuman"
                                         >
                                             <Trash2 className="size-4" />
                                         </Button>
@@ -138,13 +178,15 @@ export default function PengumumanIndex({ pengumuman }: PengumumanProps) {
                 />
             </div>
 
-            {/* Modal Tambah Pengumuman */}
+            {/* Modal Tambah/Edit Pengumuman */}
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Buat Pengumuman Baru</DialogTitle>
+                        <DialogTitle>{editingItem ? 'Edit Pengumuman' : 'Buat Pengumuman Baru'}</DialogTitle>
                         <DialogDescription>
-                            Pengumuman ini akan langsung tampil di beranda aplikasi CBT siswa dan pengawas.
+                            {editingItem
+                                ? 'Perbarui informasi dan isi pengumuman yang dipilih.'
+                                : 'Pengumuman ini akan langsung tampil di beranda aplikasi CBT siswa dan pengawas.'}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -188,7 +230,7 @@ export default function PengumumanIndex({ pengumuman }: PengumumanProps) {
                                 Batal
                             </Button>
                             <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white font-medium">
-                                Publikasikan
+                                {editingItem ? 'Perbarui Pengumuman' : 'Publikasikan'}
                             </Button>
                         </DialogFooter>
                     </form>

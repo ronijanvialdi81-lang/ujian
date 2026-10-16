@@ -75,6 +75,39 @@ class PengawasController extends Controller
     }
 
     /**
+     * Update Administrator / Proctor.
+     */
+    public function update(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nip' => 'nullable|string|max:30',
+            'nama' => 'required|string|max:50',
+            'username' => 'required|string|max:50',
+            'password' => 'nullable|string|min:4',
+            'jabatan' => 'nullable|string|max:50',
+            'level' => 'nullable|string|max:20',
+        ]);
+
+        if (Schema::hasTable('pengawas')) {
+            $data = [
+                'nip' => $validated['nip'] ?? '',
+                'nama' => $validated['nama'],
+                'username' => $validated['username'],
+                'jabatan' => $validated['jabatan'] ?? 'Proktor Utama',
+                'level' => $validated['level'] ?? 'admin',
+            ];
+
+            if (!empty($validated['password'])) {
+                $data['password'] = $validated['password'];
+            }
+
+            CandyPengawas::where('id_pengawas', $id)->update($data);
+        }
+
+        return back()->with('success', 'Data administrator / proktor berhasil diperbarui.');
+    }
+
+    /**
      * Delete Administrator / Proctor.
      */
     public function destroy($id): RedirectResponse
